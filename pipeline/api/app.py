@@ -1,6 +1,11 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
+from fastapi.responses import Response
+from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
+
+from pipeline.metrics.prometheus import update_worker_metrics
+
 from pipeline.simulator.service import FailureSimulator
 from pipeline.workers.models import RenderWorker
 from pipeline.workers.registry import worker_registry
@@ -53,4 +58,13 @@ def inject_vram_leak(
     return FailureInjectionResponse(
         failure_type=result.failure_type,
         worker=result.worker,
+    )
+    
+@app.get("/metrics", include_in_schema=False)
+def metrics() -> Response:
+    update_worker_metrics(worker_registry)
+
+    return Response(
+        content=generate_latest(),
+        media_type=CONTENT_TYPE_LATEST,
     )
