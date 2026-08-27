@@ -17,4 +17,5 @@ class WorkerRegistry:
     def get_worker(self, worker_id: str) -> RenderWorker | None:
         return self._workers.get(worker_id)
 
+
 worker_registry = WorkerRegistry()
