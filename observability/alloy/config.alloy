@@ -1,0 +1,36 @@
+local.file_match "renderguard_pipeline" {
+  path_targets = [{
+    __path__ = "/var/log/renderguard/*.jsonl",
+    job      = "renderguard-pipeline",
+    service  = "renderguard-pipeline",
+  }]
+}
+
+loki.source.file "renderguard_pipeline" {
+  targets    = local.file_match.renderguard_pipeline.targets
+  forward_to = [loki.process.renderguard_pipeline.receiver]
+}
+
+loki.process "renderguard_pipeline" {
+  stage.json {
+    expressions = {
+      event     = "event",
+      worker_id = "worker_id",
+    }
+  }
+
+  stage.labels {
+    values = {
+      event     = "",
+      worker_id = "",
+    }
+  }
+
+  forward_to = [loki.write.renderguard.receiver]
+}
+
+loki.write "renderguard" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}

@@ -12,6 +12,28 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
+  loki:
+    image: grafana/loki:latest
+    container_name: renderguard-loki
+    command:
+      - "-config.file=/etc/loki/local-config.yaml"
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./observability/loki/loki.yml:/etc/loki/local-config.yaml:ro
+      - loki-data:/loki
+
+  alloy:
+    image: grafana/alloy:latest
+    container_name: renderguard-alloy
+    depends_on:
+      - loki
+    command:
+      - "run"
+      - "/etc/alloy/config.alloy"
+    volumes:
+      - ./observability/alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - ./runtime/logs:/var/log/renderguard:ro
   grafana:
     image: grafana/grafana:latest
     container_name: renderguard-grafana
@@ -34,3 +56,4 @@ services:
 volumes:
   prometheus-data:
   grafana-data:
+  loki-data:
