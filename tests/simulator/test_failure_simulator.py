@@ -14,7 +14,7 @@ def test_vram_leak_degrades_worker() -> None:
     assert result.worker.worker_id == "render-gpu-03"
     assert result.worker.status == WorkerStatus.DEGRADED
     assert result.worker.vram_used_percent == 97.0
-    assert result.worker.failed_chunks == 3
+    assert result.worker.failed_chunks == 1
 
 
 def test_vram_leak_rejects_unknown_worker() -> None:

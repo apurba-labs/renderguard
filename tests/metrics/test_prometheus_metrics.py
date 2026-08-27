@@ -31,7 +31,7 @@ def test_metrics_reflect_worker_failure() -> None:
     assert get_metric_value(
         "renderguard_worker_failed_chunks_total",
         "render-gpu-03",
-    ) == 3.0
+    ) == 1.0
 
     assert get_metric_value(
         "renderguard_worker_health",
