@@ -10,6 +10,8 @@ from pipeline.simulator.service import FailureSimulator
 from pipeline.workers.models import RenderWorker
 from pipeline.workers.registry import worker_registry
 
+from pipeline.remediation.service import RemediationService
+
 
 app = FastAPI(
     title="RenderGuard Production Pipeline",
@@ -17,7 +19,7 @@ app = FastAPI(
 )
 
 failure_simulator = FailureSimulator(worker_registry)
-
+remediation_service = RemediationService(worker_registry)
 
 class FailureInjectionRequest(BaseModel):
     worker_id: str
@@ -27,7 +29,13 @@ class FailureInjectionResponse(BaseModel):
     failure_type: str
     worker: RenderWorker
 
-
+class QuarantineResponse(BaseModel):
+    allowed: bool
+    reason: str
+    worker: RenderWorker
+    
+    
+    
 @app.get("/health")
 def health() -> dict[str, str]:
     return {
@@ -67,4 +75,23 @@ def metrics() -> Response:
     return Response(
         content=generate_latest(),
         media_type=CONTENT_TYPE_LATEST,
+    )
+    
+@app.post(
+    "/pipeline/workers/{worker_id}/quarantine",
+    response_model=QuarantineResponse,
+)
+def quarantine_worker(worker_id: str) -> QuarantineResponse:
+    try:
+        result = remediation_service.quarantine_worker(worker_id)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=404,
+            detail=str(exc),
+        ) from exc
+
+    return QuarantineResponse(
+        allowed=result.policy.allowed,
+        reason=result.policy.reason,
+        worker=result.worker,
     )
