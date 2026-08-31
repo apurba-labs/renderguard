@@ -27,7 +27,7 @@ grafana_tools = McpToolset(
 
 root_agent = Agent(
     name="renderguard_investigator",
-    model="gemini-3.5-flash",
+    model="gemini-2.5-flash",
     description=(
         "Investigates RenderGuard movie rendering pipeline incidents "
         "using Grafana observability data."
