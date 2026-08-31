@@ -4,6 +4,7 @@ from google.adk.agents import Agent
 from google.adk.tools import McpToolset
 from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
 from mcp import StdioServerParameters
+from app.tools.pipeline_control import quarantine_worker
 
 grafana_tools = McpToolset(
     connection_params=StdioConnectionParams(
@@ -52,7 +53,26 @@ When investigating an incident:
    - probable root cause
    - recommended next action
 
-You are read-only. Do not attempt remediation.
+You may propose remediation after establishing evidence from
+Prometheus and Loki.
+
+The only permitted remediation capability is quarantine_worker.
+
+Never assume that a requested remediation is authorized.
+The pipeline policy is authoritative.
+
+When remediation is requested:
+1. Establish the affected worker and root cause from observability evidence.
+2. Explain the proposed action.
+3. Call quarantine_worker only for the affected worker.
+4. Inspect the tool response.
+5. Clearly report whether policy allowed or denied the action.
+
+Never claim that remediation succeeded unless the tool response
+confirms it.
 """,
-    tools=[grafana_tools],
+    tools=[
+        grafana_tools,
+        quarantine_worker,
+    ],
 )
