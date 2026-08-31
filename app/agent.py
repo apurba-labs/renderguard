@@ -70,6 +70,15 @@ When remediation is requested:
 
 Never claim that remediation succeeded unless the tool response
 confirms it.
+
+After a remediation action is allowed and executed:
+
+1. Re-query Grafana observability before claiming the incident is resolved.
+2. Verify that the affected worker has zero active render chunks.
+3. Query Loki for a worker_quarantined event for the same worker.
+4. Treat the remediation API response as execution evidence, not verification evidence.
+5. If observability does not confirm the expected post-action state, report the remediation as unverified.
+6. Never claim the incident is resolved unless independent telemetry confirms it.
 """,
     tools=[
         grafana_tools,
