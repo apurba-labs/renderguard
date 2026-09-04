@@ -6,9 +6,12 @@ import { RenderJob } from "@/components/control-room/render-job";
 import { WorkerGrid } from "@/components/control-room/worker-grid";
 import { usePipelineStatus } from "@/hooks/use-pipeline-status";
 import { useAgentInvestigation } from "@/hooks/use-agent-investigation";
-
+import { LiveAgentActivity } from "./live-agent-activity";
 
 export function ControlRoom() {
+
+    const agentMode = process.env.NEXT_PUBLIC_RENDERGUARD_AGENT_MODE ?? "real";
+
     const {
         workers,
         loading,
@@ -28,6 +31,7 @@ export function ControlRoom() {
 
     const {
         events,
+        activity,
         running: agentRunning,
         error: agentError,
         investigate,
@@ -117,6 +121,12 @@ export function ControlRoom() {
                         ) : null}
                     </div>
 
+                    {process.env.NODE_ENV === "development" && (
+                    <span className="text-xs text-muted-foreground">
+                        Agent: {agentMode}
+                    </span>
+                    )}
+                    
                     <button
                         type="button"
                         disabled={agentRunning}
@@ -127,10 +137,16 @@ export function ControlRoom() {
                         ? "Investigating..."
                         : "Investigate & Resolve"}
                     </button>
+                    
                     </div>
 
                     <AgentTimeline
                     events={events}
+                    running={agentRunning}
+                    />
+
+                    <LiveAgentActivity
+                    activity={activity}
                     running={agentRunning}
                     />
                 </>

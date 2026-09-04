@@ -1,6 +1,21 @@
-import { mapAdkEvent, createMapperState } from "./mapper";
+import {
+  createMapperState,
+  mapAdkCallToActivity,
+  mapAdkEvent,
+  mapAdkResponseToActivity,
+  MapperState,
+} from "./mapper";
+
 import { parseSseData } from "./parser";
-import type { RenderGuardAgentEvent } from "./types";
+
+import type {
+  AdkEvent,
+  AgentActivity,
+  RenderGuardAgentEvent,
+} from "./types";
+
+
+import { mockInvestigationEvents } from "./mock-events";
 
 const AGENT_API_URL = process.env.NEXT_PUBLIC_RENDERGUARD_AGENT_URL ?? "http://127.0.0.1:8001";
 
@@ -18,13 +33,98 @@ type RunInvestigationOptions = {
   sessionId: string;
   signal?: AbortSignal;
   onEvent: (event: RenderGuardAgentEvent) => void;
+  onActivity?: (activity: AgentActivity) => void;
 };
+
+async function runMockInvestigation(
+  onEvent: (event: RenderGuardAgentEvent) => void,
+  signal?: AbortSignal,
+  onActivity?: (activity: AgentActivity) => void,
+) {
+  const state = createMapperState();
+
+  for (const adkEvent of mockInvestigationEvents) {
+    if (signal?.aborted) {
+      throw new DOMException(
+        "Aborted",
+        "AbortError",
+      );
+    }
+
+    emitActivities(
+      adkEvent,
+      state,
+      onActivity,
+    );
+
+    const mapped = mapAdkEvent(adkEvent, state);
+
+    for (const event of mapped) {
+      onEvent(event);
+    }
+
+    await new Promise((resolve) =>
+      setTimeout(resolve, 900),
+    );
+  }
+}
+
+function emitActivities(
+  adkEvent: AdkEvent,
+  state: MapperState,
+  onActivity?: (
+    activity: AgentActivity,
+  ) => void,
+) {
+  if (!onActivity) return;
+
+  for (
+    const part of
+    adkEvent.content?.parts ?? []
+  ) {
+    if (part.functionCall) {
+      const activity =
+        mapAdkCallToActivity(
+          part.functionCall,
+          state,
+        );
+
+      if (activity) {
+        onActivity(activity);
+      }
+    }
+
+    if (part.functionResponse) {
+      const activity =
+        mapAdkResponseToActivity(
+          part.functionResponse,
+          state,
+        );
+
+      if (activity) {
+        onActivity(activity);
+      }
+    }
+  }
+}
 
 export async function runInvestigation({
   sessionId,
   signal,
   onEvent,
+  onActivity,
 }: RunInvestigationOptions): Promise<void> {
+
+  if (process.env.NEXT_PUBLIC_RENDERGUARD_AGENT_MODE ==="mock") {
+    await runMockInvestigation(
+      onEvent,
+      signal,
+      onActivity,
+    );
+
+    return;
+  }
+
   const response = await fetch(
     `${AGENT_API_URL}/run_sse`,
     {
@@ -89,6 +189,12 @@ export async function runInvestigation({
         continue;
       }
 
+      emitActivities(
+        adkEvent,
+        mapperState,
+        onActivity,
+      );
+
       for (
         const event of mapAdkEvent(
           adkEvent,
@@ -100,3 +206,4 @@ export async function runInvestigation({
     }
   }
 }
+

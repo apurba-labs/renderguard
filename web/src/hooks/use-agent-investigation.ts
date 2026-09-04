@@ -3,7 +3,9 @@
 import { useCallback, useRef, useState } from "react";
 
 import { runInvestigation } from "@/lib/renderguard-agent/client";
+
 import type {
+  AgentActivity,
   AgentStage,
   RenderGuardAgentEvent,
 } from "@/lib/renderguard-agent/types";
@@ -12,6 +14,7 @@ export type AgentTimelineState = Partial<Record<AgentStage, RenderGuardAgentEven
 
 export function useAgentInvestigation() {
   const [events, setEvents] = useState<AgentTimelineState>({});
+  const [activity, setActivity] = useState<AgentActivity[]>([]);
 
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,6 +32,7 @@ export function useAgentInvestigation() {
     controllerRef.current = controller;
 
     setEvents({});
+    setActivity([]);
     setError(null);
     setRunning(true);
 
@@ -38,13 +42,31 @@ export function useAgentInvestigation() {
       await runInvestigation({
         sessionId,
         signal: controller.signal,
-
         onEvent(event) {
           setEvents((current) => ({
             ...current,
             [event.stage]: event,
           }));
+          
         },
+        onActivity(next) {
+          setActivity((current) => {
+            const exists = current.some(
+              (item) => item.id === next.id,
+            );
+
+            if (!exists) {
+              return [...current, next];
+            }
+
+            return current.map((item) =>
+              item.id === next.id
+                ? next
+                : item,
+            );
+          });
+        },
+
       });
     } catch (cause) {
         if (cause instanceof DOMException && cause.name === "AbortError") 
@@ -67,12 +89,14 @@ export function useAgentInvestigation() {
     controllerRef.current = null;
 
     setEvents({});
+    setActivity([]);
     setError(null);
     setRunning(false);
   }, []);
 
   return {
     events,
+    activity,
     running,
     error,
     investigate,

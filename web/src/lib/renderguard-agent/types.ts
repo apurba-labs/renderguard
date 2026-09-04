@@ -14,6 +14,25 @@ export type AgentStageStatus =
   | "failed"
   | "skipped";
 
+export type AgentActivitySource =
+  | "Prometheus"
+  | "Loki"
+  | "Gemini"
+  | "Policy"
+  | "Pipeline";
+
+export type AgentActivityStatus =
+  | "running"
+  | "success"
+  | "failed";
+
+export type AgentActivity = {
+  id: string;
+  source: AgentActivitySource;
+  status: AgentActivityStatus;
+  message: string;
+};
+
 export type RenderGuardAgentEvent = {
   stage: AgentStage;
   status: AgentStageStatus;
