@@ -12,15 +12,27 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-export function IncidentPanel() {
+type IncidentPanelProps = {
+  verified: boolean;
+};
+
+export function IncidentPanel({ verified }: IncidentPanelProps) {
   return (
     <Card className="border-destructive/40 bg-destructive/5">
       <CardHeader>
         <div className="flex items-center justify-between gap-4">
           <div>
-            <p className="text-xs font-medium uppercase tracking-[0.2em] text-destructive">
-              Active Incident
-            </p>
+            <p
+            className={`text-xs font-medium uppercase tracking-[0.2em] ${
+              verified
+                ? "text-emerald-700"
+                : "text-destructive"
+            }`}
+          >
+            {verified
+              ? "Remediated Incident"
+              : "Active Incident"}
+          </p>
 
             <CardTitle className="mt-2 flex items-center gap-2 text-xl">
               <AlertTriangle className="size-5 text-destructive" />
@@ -52,7 +64,7 @@ export function IncidentPanel() {
               Affected Worker
             </p>
 
-            <div className="mt-2 flex items-center gap-2 text-sm">
+            <div className="mt-2 flex items-center gap-2 font-mono text-sm">
               <Cpu className="size-4 text-muted-foreground" />
               render-gpu-03
             </div>
@@ -79,7 +91,7 @@ export function IncidentPanel() {
             <span className="font-semibold text-destructive">
               97%
             </span>{" "}
-            while processing segment-12.
+            while processing Segment 12.
           </p>
         </div>
       </CardContent>

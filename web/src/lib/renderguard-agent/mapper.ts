@@ -16,10 +16,6 @@ export type MapperState = {
   targetWorkerId: string | null;
 };
 
-type LokiEntry = {
-  line?: string;
-};
-
 type ParsedResponse = {
   allowed?: boolean;
   reason?: string;
@@ -243,28 +239,22 @@ function mapFunctionResponse(
   }
 
   // 3. LOKI VERIFICATION RESPONSE
-  if (name.includes("loki") || name.includes("log")) 
-  {
-    const logs: LokiEntry[] = Array.isArray(payload.data) ? payload.data as LokiEntry[] : [];
-
-    const hasQuarantineLog = logs.some(
-      (entry) => {
-        const line = String(entry.line ?? "");
-
-        return (
-          line.includes("worker_quarantined") &&
-          line.includes(workerId)
-        );
-      },
-    );
-
-    if (hasQuarantineLog) {
+  if (name.includes("loki") || name.includes("log")) {
+    if (
+      hasQuarantineAuditEvidence(
+        parsedData,
+        workerId,
+      )
+    ) {
       state.lokiVerified = true;
 
       events.push({
         stage: "verify",
-        status: state.prometheusVerified ? "success" : "running",
-        message: "Loki confirms worker_quarantined audit log event",
+        status: state.prometheusVerified
+          ? "success"
+          : "running",
+        message:
+          "Loki confirms worker_quarantined audit log event",
       });
     }
   }
@@ -292,41 +282,161 @@ function hasZeroActiveChunks(
   payload: Record<string, unknown>,
   workerId: string,
 ): boolean {
-  if (!Array.isArray(payload.data)) {
-    return false;
+  function search(value: unknown): boolean {
+    if (typeof value === "string") {
+      try {
+        return search(JSON.parse(value));
+      } catch {
+        return false;
+      }
+    }
+
+    if (Array.isArray(value)) {
+      return value.some(search);
+    }
+
+    if (!isRecord(value)) {
+      return false;
+    }
+
+    const metric = isRecord(value.metric) ? value.metric : null;
+
+    if (metric?.__name__ === "renderguard_worker_active_chunks" && metric.worker_id === workerId) {
+      // Prometheus instant query
+      if (Array.isArray(value.value)) {
+        return Number(value.value[1]) === 0;
+      }
+
+      // Prometheus range query
+      if (Array.isArray(value.values)) {
+        const samples = value.values.filter(Array.isArray);
+
+        const latest = samples.at(-1);
+
+        return (Array.isArray(latest) && Number(latest[1]) === 0);
+      }
+    }
+
+    return Object.values(value).some(search);
   }
 
-  return payload.data.some((item) => {
-    if (!isRecord(item)) {
-      return false;
+  return search(payload);
+}
+
+function hasQuarantineAuditEvidence(
+  value: unknown,
+  workerId: string,
+): boolean {
+  function search(
+    current: unknown,
+    key?: string,
+  ): boolean {
+    /*
+     * MCP frequently returns JSON encoded inside
+     * content[].text.
+     */
+    if (typeof current === "string") {
+      const text = current.trim();
+
+      /*
+       * Do not accidentally verify against an echoed
+       * LogQL query such as:
+       *
+       * {worker_id="render-gpu-03",
+       *  event="worker_quarantined"}
+       */
+      if (
+        key === "query" ||
+        key === "expr"
+      ) {
+        return false;
+      }
+
+      try {
+        return search(JSON.parse(text));
+      } catch {
+        return (
+          text.includes("worker_quarantined") &&
+          text.includes(workerId)
+        );
+      }
     }
 
-    const metric = isRecord(item.metric) ? item.metric : {};
-
-    if (metric.__name__ !== "renderguard_worker_active_chunks" || metric.worker_id !== workerId) 
-    {
-      return false;
-    }
-
-    // Prometheus instant query
-    if (Array.isArray(item.value)) {
-      return Number(item.value[1]) === 0;
-    }
-
-    // Prometheus range query
-    if (Array.isArray(item.values)) {
-      const samples = item.values.filter(Array.isArray);
-
-      const latest = samples.at(-1);
-
-      return (
-        Array.isArray(latest) &&
-        Number(latest[1]) === 0
+    if (Array.isArray(current)) {
+      return current.some((item) =>
+        search(item),
       );
     }
 
+    if (!isRecord(current)) {
+      return false;
+    }
+
+    /*
+     * Structured Loki labels.
+     */
+    if (
+      current.event === "worker_quarantined" &&
+      current.worker_id === workerId
+    ) {
+      return true;
+    }
+
+    /*
+     * Loki stream response:
+     *
+     * {
+     *   stream: {
+     *     event: "worker_quarantined",
+     *     worker_id: "render-gpu-03"
+     *   },
+     *   values: [...]
+     * }
+     */
+    if (isRecord(current.stream)) {
+      const stream = current.stream;
+
+      if (
+        stream.event ===
+          "worker_quarantined" &&
+        stream.worker_id === workerId
+      ) {
+        const values = current.values;
+
+        /*
+         * Require an actual returned log entry.
+         * Labels alone are not enough evidence.
+         */
+        if (
+          Array.isArray(values) &&
+          values.length > 0
+        ) {
+          return true;
+        }
+      }
+    }
+
+    /*
+     * Common Grafana/MCP shapes:
+     * data, result, content, streams, values...
+     */
+    for (const [childKey, child] of Object.entries(current)) {
+      if (
+        childKey === "query" ||
+        childKey === "expr"
+      ) {
+        continue;
+      }
+
+      if (search(child, childKey)) {
+        return true;
+      }
+    }
+
     return false;
-  });
+  }
+
+  return search(value);
 }
 
 export function mapAdkResponseToActivity(
@@ -374,8 +484,7 @@ export function mapAdkResponseToActivity(
     };
   }
 
-  if ( name.includes("loki") || name.includes("log")) 
-  {
+  if (name.includes("loki") || name.includes("log")) {
     if (isError) {
       return {
         id: response.id,
@@ -386,11 +495,22 @@ export function mapAdkResponseToActivity(
       };
     }
 
+    if (state.remediationStarted && workerId) {
+      const verified = hasQuarantineAuditEvidence(parsedData, workerId);
+
+      return {
+        id: response.id,
+        source: "Loki",
+        status: verified ? "success" : "running",
+        message: verified ? "Quarantine audit evidence received" : "Waiting for quarantine audit evidence",
+      };
+    }
+
     return {
       id: response.id,
       source: "Loki",
       status: "success",
-      message: state.remediationStarted ? "Quarantine audit evidence received" : "Failure evidence retrieved",
+      message: "Failure evidence retrieved",
     };
   }
 

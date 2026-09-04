@@ -1,12 +1,15 @@
 "use client";
 
-import { AgentTimeline } from "@/components/control-room/agent-timeline";
+import { ControlRoomHeader } from "@/components/control-room/control-room-header";
 import { IncidentPanel } from "@/components/control-room/incident-panel";
+import { AgentControl } from "@/components/control-room/agent-control";
+import { AgentTimeline } from "@/components/control-room/agent-timeline";
 import { RenderJob } from "@/components/control-room/render-job";
 import { WorkerGrid } from "@/components/control-room/worker-grid";
 import { usePipelineStatus } from "@/hooks/use-pipeline-status";
 import { useAgentInvestigation } from "@/hooks/use-agent-investigation";
-import { LiveAgentActivity } from "./live-agent-activity";
+import { LiveAgentActivity } from "@/components/control-room/live-agent-activity";
+import { SimulationControls } from "@/components/control-room/simulation-controls";
 
 export function ControlRoom() {
 
@@ -35,58 +38,27 @@ export function ControlRoom() {
         running: agentRunning,
         error: agentError,
         investigate,
+        reset,
     } = useAgentInvestigation();
 
     const hasAgentActivity = Object.keys(events).length > 0 || agentRunning;
 
     const activeIncident = degradedWorkers.length > 0 || hasAgentActivity;
 
+    const remediationVerified = events.verify?.status === "success" && events.complete?.status === "success";
+
+    const remediationInProgress = agentRunning || events.act?.status === "success";
+
     return (
         <main className="min-h-screen bg-background">
         <div className="mx-auto max-w-[1600px] px-6 py-8 lg:px-10">
-            <header className="mb-8">
-            <div className="flex items-center gap-3">
-                <div className="size-2 rounded-full bg-emerald-500" />
 
-                <span className="text-xs font-medium uppercase tracking-[0.24em] text-muted-foreground">
-                RenderGuard
-                </span>
-            </div>
-
-            <div className="mt-5 flex items-end justify-between gap-6">
-                <div>
-                <h1 className="text-3xl font-semibold tracking-tight">
-                    Production Control Room
-                </h1>
-
-                <p className="mt-2 text-sm text-muted-foreground">
-                    Autonomous render operations and incident response
-                </p>
-                </div>
-
-                <div className="text-right">
-                <p className="text-xs uppercase tracking-wider text-muted-foreground">
-                    Pipeline
-                </p>
-
-                <p className="mt-1 text-sm font-medium">
-                    {loading
-                        ? "Connecting..."
-                        : [
-                            `${healthyCount} healthy`,
-                            degradedWorkers.length
-                            ? `${degradedWorkers.length} degraded`
-                            : null,
-                            quarantinedCount
-                            ? `${quarantinedCount} quarantined`
-                            : null,
-                        ]
-                            .filter(Boolean)
-                            .join(" · ")}
-                </p>
-                </div>
-            </div>
-            </header>
+            <ControlRoomHeader
+            loading={loading}
+            healthyCount={healthyCount}
+            degradedCount={degradedWorkers.length}
+            quarantinedCount={quarantinedCount}
+            />
 
             {error ? (
             <div className="mb-8 rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
@@ -95,50 +67,34 @@ export function ControlRoom() {
             ) : null}
 
             <div className="space-y-8">
+
+            <div className="flex justify-end">
+                <SimulationControls  
+                canStartIncident={
+                    degradedWorkers.length === 0 &&
+                    quarantinedCount === 0
+                }
+                canReset={!agentRunning && Object.keys(events).length > 0}
+                onReset={reset} 
+                />
+            </div>
+
             <RenderJob />
 
             <WorkerGrid workers={workers} />
 
                 {activeIncident ? (
                 <>
-                    <IncidentPanel />
+                    <IncidentPanel verified={remediationVerified}/>
 
-                    <div className="flex items-center justify-between gap-4 rounded-xl border bg-card p-5">
-                    <div>
-                        <p className="text-sm font-medium">
-                        RenderGuard Agent
-                        </p>
-
-                        <p className="mt-1 text-sm text-muted-foreground">
-                        Investigate the incident and perform policy-guarded
-                        remediation when supported by evidence.
-                        </p>
-
-                        {agentError ? (
-                        <p className="mt-2 text-sm text-destructive">
-                            {agentError}
-                        </p>
-                        ) : null}
-                    </div>
-
-                    {process.env.NODE_ENV === "development" && (
-                    <span className="text-xs text-muted-foreground">
-                        Agent: {agentMode}
-                    </span>
-                    )}
-                    
-                    <button
-                        type="button"
-                        disabled={agentRunning}
-                        onClick={investigate}
-                        className="shrink-0 rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                        {agentRunning
-                        ? "Investigating..."
-                        : "Investigate & Resolve"}
-                    </button>
-                    
-                    </div>
+                    <AgentControl
+                    running={agentRunning}
+                    verified={remediationVerified}
+                    remediationStarted={remediationInProgress}
+                    error={agentError}
+                    mode={agentMode}
+                    onInvestigate={investigate}
+                    />
 
                     <AgentTimeline
                     events={events}
