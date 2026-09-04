@@ -72,22 +72,13 @@ async function runMockInvestigation(
 function emitActivities(
   adkEvent: AdkEvent,
   state: MapperState,
-  onActivity?: (
-    activity: AgentActivity,
-  ) => void,
+  onActivity?: (activity: AgentActivity) => void,
 ) {
   if (!onActivity) return;
 
-  for (
-    const part of
-    adkEvent.content?.parts ?? []
-  ) {
+  for (const part of adkEvent.content?.parts ?? []) {
     if (part.functionCall) {
-      const activity =
-        mapAdkCallToActivity(
-          part.functionCall,
-          state,
-        );
+      const activity = mapAdkCallToActivity(part.functionCall, state);
 
       if (activity) {
         onActivity(activity);
@@ -95,11 +86,7 @@ function emitActivities(
     }
 
     if (part.functionResponse) {
-      const activity =
-        mapAdkResponseToActivity(
-          part.functionResponse,
-          state,
-        );
+      const activity = mapAdkResponseToActivity(part.functionResponse, state);
 
       if (activity) {
         onActivity(activity);
@@ -162,9 +149,7 @@ export async function runInvestigation({
     );
   }
 
-  const reader = response.body
-    .pipeThrough(new TextDecoderStream())
-    .getReader();
+  const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
 
   const mapperState = createMapperState();
 

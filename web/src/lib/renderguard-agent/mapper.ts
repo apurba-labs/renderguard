@@ -184,11 +184,7 @@ function mapFunctionResponse(
   const name = response.name.toLowerCase();
   const parsedData = parseResponseContent(response);
   const payload = isRecord(parsedData) ? parsedData: {};
-
-  // Debug logging
-  console.log("🔍 [RenderGuard response name]:", response.name);
-  console.log("🔍 [RenderGuard parsed payload]:", parsedData);
-
+  
   const workerId = state.targetWorkerId;
   if (!workerId) {
     return events;
@@ -203,9 +199,7 @@ function mapFunctionResponse(
       events.push({
         stage: "guard",
         status: "failed",
-        message: typeof payload.reason === "string"
-          ? payload.reason
-          : "Quarantine denied by policy",
+        message: typeof payload.reason === "string" ? payload.reason : "Quarantine denied by policy",
       });
       return events;
     }
@@ -242,24 +236,16 @@ function mapFunctionResponse(
 
       events.push({
         stage: "verify",
-        status: state.lokiVerified
-          ? "success"
-          : "running",
-        message:
-          `Prometheus confirms ${workerId} has zero active chunks`,
+        status: state.lokiVerified ? "success" : "running",
+        message: `Prometheus confirms ${workerId} has zero active chunks`,
       });
     }
   }
 
   // 3. LOKI VERIFICATION RESPONSE
-  if (
-    name.includes("loki") ||
-    name.includes("log")
-  ) {
-    const logs: LokiEntry[] =
-      Array.isArray(payload.data)
-        ? payload.data as LokiEntry[]
-        : [];
+  if (name.includes("loki") || name.includes("log")) 
+  {
+    const logs: LokiEntry[] = Array.isArray(payload.data) ? payload.data as LokiEntry[] : [];
 
     const hasQuarantineLog = logs.some(
       (entry) => {
@@ -277,11 +263,8 @@ function mapFunctionResponse(
 
       events.push({
         stage: "verify",
-        status: state.prometheusVerified
-          ? "success"
-          : "running",
-        message:
-          "Loki confirms worker_quarantined audit log event",
+        status: state.prometheusVerified ? "success" : "running",
+        message: "Loki confirms worker_quarantined audit log event",
       });
     }
   }
@@ -391,10 +374,8 @@ export function mapAdkResponseToActivity(
     };
   }
 
-  if (
-    name.includes("loki") ||
-    name.includes("log")
-  ) {
+  if ( name.includes("loki") || name.includes("log")) 
+  {
     if (isError) {
       return {
         id: response.id,
@@ -409,25 +390,18 @@ export function mapAdkResponseToActivity(
       id: response.id,
       source: "Loki",
       status: "success",
-      message: state.remediationStarted
-        ? "Quarantine audit evidence received"
-        : "Failure evidence retrieved",
+      message: state.remediationStarted ? "Quarantine audit evidence received" : "Failure evidence retrieved",
     };
   }
 
   if (name === "quarantine_worker") {
-    const allowed =
-      payload.allowed === true;
+    const allowed = payload.allowed === true;
 
     return {
       id: response.id,
       source: "Policy",
-      status: allowed
-        ? "success"
-        : "failed",
-      message: allowed
-        ? "Quarantine policy returned ALLOW"
-        : "Quarantine policy returned DENY",
+      status: allowed ? "success" : "failed",
+      message: allowed ? "Quarantine policy returned ALLOW" : "Quarantine policy returned DENY",
     };
   }
 
@@ -441,25 +415,16 @@ export function mapAdkCallToActivity(
   const name = call.name.toLowerCase();
 
   if (name === "query_prometheus") {
-    const expr = String(
-      call.args?.expr ??
-      call.args?.query ??
-      "",
-    );
+    const expr = String(call.args?.expr ?? call.args?.query ?? "");
 
-    let message =
-      "Querying Prometheus telemetry";
+    let message = "Querying Prometheus telemetry";
 
     if (expr.includes("worker_health")) {
-      message =
-        "Checking render worker health";
+      message = "Checking render worker health";
     } else if (expr.includes("vram_percent")) {
-      message =
-        "Inspecting GPU VRAM pressure";
+      message = "Inspecting GPU VRAM pressure";
     } else if (expr.includes("active_chunks")) {
-      message = state.remediationStarted
-        ? "Verifying active chunks after remediation"
-        : "Checking active render chunks";
+      message = state.remediationStarted ? "Verifying active chunks after remediation" : "Checking active render chunks";
     }
 
     return {
@@ -470,10 +435,7 @@ export function mapAdkCallToActivity(
     };
   }
 
-  if (
-    name.includes("loki") ||
-    name.includes("log")
-  ) {
+  if (name.includes("loki") || name.includes("log")) {
     return {
       id: call.id,
       source: "Loki",
@@ -493,8 +455,7 @@ export function mapAdkCallToActivity(
       id: call.id,
       source: "Policy",
       status: "running",
-      message:
-        `Evaluating quarantine policy for ${workerId}`,
+      message: `Evaluating quarantine policy for ${workerId}`,
     };
   }
 
@@ -509,20 +470,11 @@ export function mapAdkEvent(
 
   for (const part of event.content?.parts ?? []) {
     if (part.functionCall) {
-      console.log(
-        "🔥 [ADK RAW FUNCTION CALL]:",
-        part.functionCall.name,
-        JSON.stringify(part.functionCall.args ?? {})
-      );
       const results = mapFunctionCall(part.functionCall, state);
       mapped.push(...results);
     }
 
     if (part.functionResponse) {
-      console.log(
-        "⚡ [ADK RAW FUNCTION RESPONSE]:",
-        part.functionResponse.name
-      );
       const results = mapFunctionResponse(part.functionResponse, state);
       mapped.push(...results);
     }

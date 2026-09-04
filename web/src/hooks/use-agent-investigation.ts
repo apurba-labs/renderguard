@@ -60,9 +60,7 @@ export function useAgentInvestigation() {
             }
 
             return current.map((item) =>
-              item.id === next.id
-                ? next
-                : item,
+              item.id === next.id ? next : item,
             );
           });
         },
