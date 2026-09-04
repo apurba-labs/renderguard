@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
 
 from fastapi.responses import Response
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
@@ -16,6 +17,16 @@ from pipeline.remediation.service import RemediationService
 app = FastAPI(
     title="RenderGuard Production Pipeline",
     version="0.1.0",
+)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3001",
+        "http://127.0.0.1:3001",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 failure_simulator = FailureSimulator(worker_registry)
@@ -95,3 +106,7 @@ def quarantine_worker(worker_id: str) -> QuarantineResponse:
         reason=result.policy.reason,
         worker=result.worker,
     )
+    
+@app.post("/simulation/reset")
+def reset_simulation():
+    return failure_simulator.reset_workers()

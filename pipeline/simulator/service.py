@@ -55,3 +55,25 @@ class FailureSimulator:
             worker=worker,
             failure_type=FailureType.VRAM_LEAK,
         )
+        
+    def reset_workers(self) -> list[RenderWorker]:
+        defaults = {
+            "render-gpu-01": 41.0,
+            "render-gpu-02": 44.0,
+            "render-gpu-03": 47.0,
+            "render-gpu-04": 50.0,
+        }
+
+        for worker_id, vram in defaults.items():
+            worker = self._registry.get_worker(worker_id)
+
+            if worker is None:
+                continue
+
+            worker.status = WorkerStatus.HEALTHY
+            worker.vram_used_percent = vram
+            worker.active_chunks = 2
+            worker.failed_chunks = 0
+            worker.completed_chunks = 0
+
+        return self._registry.list_workers()
