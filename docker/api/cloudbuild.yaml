@@ -5,8 +5,8 @@ steps:
       - -f
       - docker/api/Dockerfile
       - -t
-      - us-central1-docker.pkg.dev/$PROJECT_ID/renderguard/api:$COMMIT_SHA
+      - us-central1-docker.pkg.dev/$PROJECT_ID/renderguard/api:${_TAG}
       - .
 
 images:
-  - us-central1-docker.pkg.dev/$PROJECT_ID/renderguard/api:$COMMIT_SHA
+  - us-central1-docker.pkg.dev/$PROJECT_ID/renderguard/api:${_TAG}
