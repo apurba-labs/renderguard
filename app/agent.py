@@ -13,7 +13,8 @@ grafana_tools = McpToolset(
             args=[
                 "-transport", "stdio",
                 "-disable-write",
-                "-enabled-tools", "datasource,prometheus,loki,dashboard,search",
+                "-enabled-tools",
+                "datasource,prometheus,loki,dashboard,search",
             ],
             env={
                 "GRAFANA_URL": os.environ["GRAFANA_URL"],
@@ -21,10 +22,10 @@ grafana_tools = McpToolset(
                     "GRAFANA_SERVICE_ACCOUNT_TOKEN"
                 ],
             },
-        )
+        ),
+        timeout=20.0,
     )
 )
-
 
 root_agent = Agent(
     name="renderguard_investigator",
