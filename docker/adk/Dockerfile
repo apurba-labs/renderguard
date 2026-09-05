@@ -12,4 +12,4 @@ RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
 COPY app ./app
 
-CMD ["adk", "run", "app"]
+CMD ["sh", "-c", "adk api_server app --host 0.0.0.0 --port ${PORT:-8080}"]

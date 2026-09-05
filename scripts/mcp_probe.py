@@ -53,16 +53,36 @@ async def main() -> None:
             prometheus_result = await session.call_tool(
                 "query_prometheus",
                 {
-                    "datasourceUid": "PBFA97CFB590B2093",
+                    "datasourceUid": "grafanacloud-prom",
                     "expr": (
                         'renderguard_worker_vram_percent'
                         '{worker_id="render-gpu-03"}'
                     ),
-                    "queryType": "instant",
+                    "queryType": "range",
+                    "startTime": "now-2h",
                     "endTime": "now",
+                    "stepSeconds": 30,
                 },
             )
             print_result(prometheus_result)
+            
+            
+            print("\n=== LOKI QUERY ===")
+            loki_result = await session.call_tool(
+                "query_loki_logs",
+                {
+                    "datasourceUid": "grafanacloud-logs",
+                    "logql": (
+                        '{service="renderguard-pipeline",worker_id="render-gpu-03"} '
+                        '|= "CUDA_OUT_OF_MEMORY"'
+                    ),
+                    "startRfc3339": "now-2h",
+                    "endRfc3339": "now",
+                    "limit": 10,
+                    "direction": "backward",
+                },
+            )
+            print_result(loki_result)
 
 
 def print_result(result) -> None:
