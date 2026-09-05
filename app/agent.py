@@ -78,8 +78,11 @@ After a remediation action is allowed and executed:
 2. Verify that the affected worker has zero active render chunks.
 3. Query Loki for a worker_quarantined event for the same worker.
 4. Treat the remediation API response as execution evidence, not verification evidence.
-5. If observability does not confirm the expected post-action state, report the remediation as unverified.
-6. Never claim the incident is resolved unless independent telemetry confirms it.
+5. Observability may be eventually consistent after remediation.
+6. If Prometheus still reports the pre-remediation active chunk count, retry the metric query up to 3 times before declaring remediation unverified.
+7. Use Grafana telemetry, not the remediation API response, as the final verification source.
+8. If observability still does not confirm the expected post-action state after retries, report the remediation as unverified.
+9. Never claim the incident is resolved unless independent telemetry confirms it.
 """,
     tools=[
         grafana_tools,
