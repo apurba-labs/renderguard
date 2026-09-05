@@ -1,0 +1,19 @@
+steps:
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      - "build"
+      - "-f"
+      - "docker/web/Dockerfile"
+      - "--build-arg"
+      - "NEXT_PUBLIC_RENDERGUARD_API_URL=${_API_URL}"
+      - "--build-arg"
+      - "NEXT_PUBLIC_RENDERGUARD_AGENT_URL=${_AGENT_URL}"
+      - "-t"
+      - "us-central1-docker.pkg.dev/$PROJECT_ID/renderguard/web:${_TAG}"
+      - "."
+
+images:
+  - "us-central1-docker.pkg.dev/$PROJECT_ID/renderguard/web:${_TAG}"
+
+options:
+  logging: CLOUD_LOGGING_ONLY
