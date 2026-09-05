@@ -1,0 +1,15 @@
+steps:
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      - "build"
+      - "-f"
+      - "docker/adk/Dockerfile"
+      - "-t"
+      - "us-central1-docker.pkg.dev/$PROJECT_ID/renderguard/agent:${_TAG}"
+      - "."
+
+images:
+  - "us-central1-docker.pkg.dev/$PROJECT_ID/renderguard/agent:${_TAG}"
+
+substitutions:
+  _TAG: "latest"
