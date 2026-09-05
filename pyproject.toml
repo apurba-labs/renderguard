@@ -1,7 +1,7 @@
 [project]
 name = "renderguard"
 version = "0.1.0"
-description = "Add your description here"
+description = "Agentic observability and policy-guarded remediation for production media rendering workloads"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
