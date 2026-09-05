@@ -3,6 +3,9 @@ import logging
 from pathlib import Path
 from typing import Any
 
+from pipeline.logs.grafana_cloud import (
+    push_loki_event,
+)
 
 LOG_DIR = Path("runtime/logs")
 LOG_DIR.mkdir(parents=True, exist_ok=True)
@@ -38,3 +41,5 @@ def emit_render_event(
     }
 
     logger.info(json.dumps(record))
+    
+    push_loki_event(record)

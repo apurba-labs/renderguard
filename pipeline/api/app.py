@@ -10,6 +10,7 @@ from pipeline.metrics.prometheus import update_worker_metrics
 from pipeline.simulator.service import FailureSimulator
 from pipeline.workers.models import RenderWorker
 from pipeline.workers.registry import worker_registry
+from pipeline.metrics.otel import initialize_otel_metrics
 
 from pipeline.remediation.service import RemediationService
 
@@ -32,6 +33,7 @@ app.add_middleware(
 
 failure_simulator = FailureSimulator(worker_registry)
 remediation_service = RemediationService(worker_registry)
+initialize_otel_metrics(worker_registry)
 
 class FailureInjectionRequest(BaseModel):
     worker_id: str
