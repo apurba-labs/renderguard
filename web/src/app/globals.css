@@ -49,82 +49,171 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  /*
+   * RenderGuard — Cinematic Control Room
+   *
+   * Obsidian base
+   * Slate telemetry surfaces
+   * Cyan operational signal
+   * Amber warning
+   * Crimson incident
+   */
+
+  --background: oklch(0.115 0.012 240);
+  --foreground: oklch(0.96 0.008 220);
+
+  --card: oklch(0.155 0.015 240);
+  --card-foreground: oklch(0.96 0.008 220);
+
+  --popover: oklch(0.145 0.015 240);
+  --popover-foreground: oklch(0.96 0.008 220);
+
+  /* RenderGuard cyan */
+  --primary: oklch(0.79 0.14 205);
+  --primary-foreground: oklch(0.105 0.015 240);
+
+  --secondary: oklch(0.19 0.018 240);
+  --secondary-foreground: oklch(0.92 0.01 220);
+
+  --muted: oklch(0.18 0.015 240);
+  --muted-foreground: oklch(0.68 0.018 225);
+
+  --accent: oklch(0.22 0.035 220);
+  --accent-foreground: oklch(0.9 0.04 205);
+
+  /* Incident crimson */
+  --destructive: oklch(0.64 0.23 25);
+
+  --border: oklch(0.31 0.025 230 / 55%);
+  --input: oklch(0.24 0.02 235);
+  --ring: oklch(0.79 0.14 205);
+
+  /* Telemetry palette */
+  --chart-1: oklch(0.79 0.14 205);
+  --chart-2: oklch(0.78 0.16 165);
+  --chart-3: oklch(0.78 0.16 75);
+  --chart-4: oklch(0.64 0.23 25);
+  --chart-5: oklch(0.67 0.18 285);
+
+  --radius: 0.75rem;
+
+  /*
+   * Not currently used by RenderGuard.
+   * Kept because shadcn maps these variables globally.
+   */
+  --sidebar: oklch(0.135 0.015 240);
+  --sidebar-foreground: oklch(0.94 0.008 220);
+  --sidebar-primary: oklch(0.79 0.14 205);
+  --sidebar-primary-foreground: oklch(0.105 0.015 240);
+  --sidebar-accent: oklch(0.19 0.02 235);
+  --sidebar-accent-foreground: oklch(0.94 0.008 220);
+  --sidebar-border: oklch(0.31 0.025 230 / 55%);
+  --sidebar-ring: oklch(0.79 0.14 205);
 }
 
+/*
+ * Same palette if a component happens to use the dark variant.
+ * No theme-switching behavior is introduced.
+ */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: oklch(0.115 0.012 240);
+  --foreground: oklch(0.96 0.008 220);
+
+  --card: oklch(0.155 0.015 240);
+  --card-foreground: oklch(0.96 0.008 220);
+
+  --popover: oklch(0.145 0.015 240);
+  --popover-foreground: oklch(0.96 0.008 220);
+
+  --primary: oklch(0.79 0.14 205);
+  --primary-foreground: oklch(0.105 0.015 240);
+
+  --secondary: oklch(0.19 0.018 240);
+  --secondary-foreground: oklch(0.92 0.01 220);
+
+  --muted: oklch(0.18 0.015 240);
+  --muted-foreground: oklch(0.68 0.018 225);
+
+  --accent: oklch(0.22 0.035 220);
+  --accent-foreground: oklch(0.9 0.04 205);
+
+  --destructive: oklch(0.64 0.23 25);
+
+  --border: oklch(0.31 0.025 230 / 55%);
+  --input: oklch(0.24 0.02 235);
+  --ring: oklch(0.79 0.14 205);
+
+  --chart-1: oklch(0.79 0.14 205);
+  --chart-2: oklch(0.78 0.16 165);
+  --chart-3: oklch(0.78 0.16 75);
+  --chart-4: oklch(0.64 0.23 25);
+  --chart-5: oklch(0.67 0.18 285);
+
+  --sidebar: oklch(0.135 0.015 240);
+  --sidebar-foreground: oklch(0.94 0.008 220);
+  --sidebar-primary: oklch(0.79 0.14 205);
+  --sidebar-primary-foreground: oklch(0.105 0.015 240);
+  --sidebar-accent: oklch(0.19 0.02 235);
+  --sidebar-accent-foreground: oklch(0.94 0.008 220);
+  --sidebar-border: oklch(0.31 0.025 230 / 55%);
+  --sidebar-ring: oklch(0.79 0.14 205);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground;
-  }
+
   html {
     @apply font-sans;
+    background: var(--background);
   }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    min-height: 100vh;
+
+    background-image:
+      radial-gradient(
+        circle at 50% -20%,
+        oklch(0.24 0.055 220 / 22%),
+        transparent 42%
+      ),
+      linear-gradient(
+        to bottom,
+        oklch(0.135 0.016 240),
+        var(--background) 32rem
+      );
+  }
+
+  ::selection {
+    background: oklch(0.79 0.14 205 / 28%);
+    color: var(--foreground);
+  }
+}
+
+@layer utilities {
+  .cinematic-card {
+    background: oklch(0.155 0.015 240 / 80%);
+    backdrop-filter: blur(16px);
+    border: 1px solid oklch(0.31 0.025 230 / 40%);
+    box-shadow: 0 10px 30px -10px oklch(0 0 0 / 50%);
+  }
+
+  .glow-cyan {
+    box-shadow: 0 0 20px -3px oklch(0.79 0.14 205 / 35%);
+  }
+
+  .glow-destructive {
+    box-shadow: 0 0 25px -2px oklch(0.64 0.23 25 / 45%);
+  }
+}
+
+/* Hides Next.js dev overlay badge during recording */
+nextjs-portal {
+  display: none !important;
+}
+
+.investigate-btn:hover {
+  box-shadow: 0 0 20px rgba(0, 242, 254, 0.4);
 }
