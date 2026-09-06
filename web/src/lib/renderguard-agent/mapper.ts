@@ -98,6 +98,11 @@ function mapFunctionCall(
     
     return [
       {
+        stage: "observe",
+        status: "success",
+        message: "Prometheus and Loki telemetry collected",
+      },
+      {
         stage: "correlate",
         status: "success",
         message: "Prometheus and Loki evidence correlated",
