@@ -17,7 +17,6 @@ import type {
 
 import { mockInvestigationEvents } from "./mock-events";
 
-const AGENT_API_URL = process.env.NEXT_PUBLIC_RENDERGUARD_AGENT_URL ?? "http://127.0.0.1:8001";
 
 const INVESTIGATION_PROMPT = `
 Investigate the current RenderGuard incident using Grafana telemetry.
@@ -113,7 +112,7 @@ export async function runInvestigation({
   }
 
   const response = await fetch(
-    `${AGENT_API_URL}/run_sse`,
+    `/api/agent/run`,
     {
       method: "POST",
       headers: {
